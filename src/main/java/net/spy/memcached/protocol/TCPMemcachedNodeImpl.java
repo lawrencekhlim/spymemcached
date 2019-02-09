@@ -25,6 +25,7 @@ package net.spy.memcached.protocol;
 
 import java.io.IOException;
 import java.net.SocketAddress;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
@@ -96,7 +97,7 @@ public abstract class TCPMemcachedNodeImpl extends SpyObject implements
     //   http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6214569
     rbuf = ByteBuffer.allocateDirect(bufSize);
     wbuf = ByteBuffer.allocateDirect(bufSize);
-    getWbuf().clear();
+    ((Buffer) getWbuf()).clear();
     readQ = rq;
     writeQ = wq;
     inputQueue = iq;
