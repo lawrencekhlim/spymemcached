@@ -62,6 +62,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.ConcurrentModificationException;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
@@ -250,6 +251,12 @@ public class MemcachedConnection extends SpyThread {
    * Optionally bound the retry queue if set via system property.
    */
   private final int retryQueueSize;
+  
+  /**
+   * Calculate server load so we can get load imbalance metrics
+   */
+  private HashMap<String, Integer> serverLoad;
+  private HashMap<String, Integer> currentEpochServerLoad;
 
   /**
    * Construct a {@link MemcachedConnection}.
@@ -279,6 +286,10 @@ public class MemcachedConnection extends SpyThread {
     listenerExecutorService = f.getListenerExecutorService();
     this.bufSize = bufSize;
     this.connectionFactory = f;
+    
+    // string to represent the server, integer to represent number of requests for that server
+    serverLoad = new HashMap<String, Integer>();
+    currentEpochServerLoad = new HashMap<String, Integer>();
 
     String verifyAlive = System.getProperty("net.spy.verifyAliveOnConnect");
     if(verifyAlive != null && verifyAlive.equals("true")) {
@@ -1240,6 +1251,17 @@ public class MemcachedConnection extends SpyThread {
 
     assert o.isCancelled() || placeIn != null : "No node found for key " + key;
     if (placeIn != null) {
+	  if (serverLoad.containsKey(placeIn.getSocketAddress().toString())) {
+	    serverLoad.put(placeIn.getSocketAddress().toString(), serverLoad.get(placeIn.getSocketAddress().toString()) + 1);
+	  } else {
+	    serverLoad.put(placeIn.getSocketAddress().toString(), 1);
+	  }
+	  if (currentEpochServerLoad.containsKey(placeIn.getSocketAddress().toString())) {
+		  currentEpochServerLoad.put(placeIn.getSocketAddress().toString(), 
+				  currentEpochServerLoad.get(placeIn.getSocketAddress().toString()) + 1);
+	  } else {
+	    currentEpochServerLoad.put(placeIn.getSocketAddress().toString(), 1);
+	  }
       addOperation(placeIn, o);
     } else {
       assert o.isCancelled() : "No node found for " + key + " (and not "
@@ -1515,5 +1537,26 @@ public class MemcachedConnection extends SpyThread {
     }
     retryOps.add(op);
   }
-
+  
+  public void resetEpochServerLoad() {
+    currentEpochServerLoad.clear();
+  }
+	
+  public void resetServerLoad() {
+    serverLoad.clear();
+  }
+  
+  public double getCurrentServerLoadImbalance() {
+    ArrayList<Integer> currentLoadValues = new ArrayList<Integer>(currentEpochServerLoad.values());
+	Collections.sort(currentLoadValues);
+	return (double) currentLoadValues.get(currentLoadValues.size() - 1) / (double) currentLoadValues.get(0);
+  }
+  
+  public void printServerLoad() {
+	System.out.println("Printing workload with size: " + serverLoad.size());
+	for (String key : serverLoad.keySet()) {
+	  System.out.println("Server: " + key + ": " + serverLoad.get(key));
+	}
+  }
+  
 }

@@ -2488,6 +2488,8 @@ public class MemcachedClient extends SpyObject implements MemcachedClientIF,
    */
   @Override
   public boolean shutdown(long timeout, TimeUnit unit) {
+	mconn.printServerLoad();
+	  
     // Guard against double shutdowns (bug 8).
     if (shuttingDown) {
       getLogger().info("Suppressing duplicate attempt to shut down");
@@ -2524,6 +2526,22 @@ public class MemcachedClient extends SpyObject implements MemcachedClientIF,
       }
     }
     return rv;
+  }
+  
+  public double getCurrentServerLoadImbalance () {
+    return mconn.getCurrentServerLoadImbalance();
+  }
+	
+  public void resetEpochServerLoad() {
+    mconn.resetEpochServerLoad();
+  }
+	
+  public void resetServerLoad() {
+    mconn.resetServerLoad();
+  }
+	
+  public void printServerLoad() {
+	mconn.printServerLoad();
   }
 
   /**
