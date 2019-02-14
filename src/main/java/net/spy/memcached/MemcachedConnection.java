@@ -256,6 +256,7 @@ public class MemcachedConnection extends SpyThread {
    * Calculate server load so we can get load imbalance metrics
    */
   private HashMap<String, Integer> serverLoad;
+  private ArrayList<HashMap<String, Integer>> epochServerLoads;
   private HashMap<String, Integer> currentEpochServerLoad;
 
   /**
@@ -289,6 +290,7 @@ public class MemcachedConnection extends SpyThread {
     
     // string to represent the server, integer to represent number of requests for that server
     serverLoad = new HashMap<String, Integer>();
+    epochServerLoads = new ArrayList<HashMap<String, Integer>>();
     currentEpochServerLoad = new HashMap<String, Integer>();
 
     String verifyAlive = System.getProperty("net.spy.verifyAliveOnConnect");
@@ -1539,7 +1541,8 @@ public class MemcachedConnection extends SpyThread {
   }
   
   public void resetEpochServerLoad() {
-    currentEpochServerLoad.clear();
+	epochServerLoads.add(currentEpochServerLoad);
+    currentEpochServerLoad = new HashMap<String, Integer>();
   }
 	
   public void resetServerLoad() {
@@ -1553,7 +1556,15 @@ public class MemcachedConnection extends SpyThread {
   }
   
   public void printServerLoad() {
-	System.out.println("Printing workload with size: " + serverLoad.size());
+	System.out.println("Printing workload per epoch with size: " + serverLoad.size());
+	for (int i = 0; i < epochServerLoads.size(); i++) {
+		System.out.println("epoch " + i);
+		for (String key : epochServerLoads.get(i).keySet()) {
+	      System.out.println("Server: " + key + ": " + serverLoad.get(key));
+		}
+	}
+	  
+	System.out.println("Printing total workload with size: " + serverLoad.size());
 	for (String key : serverLoad.keySet()) {
 	  System.out.println("Server: " + key + ": " + serverLoad.get(key));
 	}
