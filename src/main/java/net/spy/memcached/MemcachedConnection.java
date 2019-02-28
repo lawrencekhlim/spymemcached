@@ -1556,14 +1556,16 @@ public class MemcachedConnection extends SpyThread {
   }
   
   public void printServerLoad() {
-	System.out.println("Printing workload per epoch with size: " + serverLoad.size());
-	for (int i = 0; i < epochServerLoads.size(); i++) {
-		System.out.println("epoch " + i);
-		for (String key : epochServerLoads.get(i).keySet()) {
-	      System.out.println("Server: " + key + ": " + serverLoad.get(key));
-		}
-	}
+	  // comment out server load per epoch for now, that is only used for dynamic resizing
 	  
+//	System.out.println("Printing workload per epoch with size: " + serverLoad.size());
+//	for (int i = 0; i < epochServerLoads.size(); i++) {
+//		System.out.println("epoch " + i);
+//		for (String key : epochServerLoads.get(i).keySet()) {
+//	      System.out.println("Server: " + key + ": " + serverLoad.get(key));
+//		}
+//	}
+
 	System.out.println("Printing total workload with size: " + serverLoad.size());
 	for (String key : serverLoad.keySet()) {
 	  System.out.println("Server: " + key + ": " + serverLoad.get(key));
